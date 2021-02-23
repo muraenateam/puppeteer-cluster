@@ -74,6 +74,7 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
     static CONCURRENCY_PAGE = 1; // shares cookies, etc.
     static CONCURRENCY_CONTEXT = 2; // no cookie sharing (uses contexts)
     static CONCURRENCY_BROWSER = 3; // no cookie sharing and individual processes (uses contexts)
+    static CONCURRENCY_NECRO = 4; // segregated browser profiles for each browser instance
 
     private options: ClusterOptions;
     private perBrowserOptions: LaunchOptions[] | null = null;
@@ -145,6 +146,9 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
             this.browser = new builtInConcurrency.Context(browserOptions, puppeteer);
         } else if (this.options.concurrency === Cluster.CONCURRENCY_BROWSER) {
             this.browser = new builtInConcurrency.Browser(browserOptions, puppeteer);
+        }else if (this.options.concurrency === Cluster.CONCURRENCY_NECRO) {
+            // necro concurrency segregates each new browser in its own user data dir
+            this.browser = new builtInConcurrency.Necro(browserOptions, puppeteer);
         } else if (typeof this.options.concurrency === 'function') {
             this.browser = new this.options.concurrency(browserOptions, puppeteer);
         } else {
@@ -268,39 +272,6 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
             return;
         }
 
-        const url = job.getUrl();
-        const domain = job.getDomain();
-
-        // Check if URL was already crawled (on skipDuplicateUrls)
-        if (this.options.skipDuplicateUrls
-            && url !== undefined && this.duplicateCheckUrls.has(url)) {
-            // already crawled, just ignore
-            debug(`Skipping duplicate URL: ${job.getUrl()}`);
-            this.work();
-            return;
-        }
-
-        // Check if the job needs to be delayed due to sameDomainDelay
-        if (this.options.sameDomainDelay !== 0 && domain !== undefined) {
-            const lastDomainAccess = this.lastDomainAccesses.get(domain);
-            if (lastDomainAccess !== undefined
-                && lastDomainAccess + this.options.sameDomainDelay > Date.now()) {
-                this.jobQueue.push(job, {
-                    delayUntil: lastDomainAccess + this.options.sameDomainDelay,
-                });
-                this.work();
-                return;
-            }
-        }
-
-        // Check are all positive, let's actually run the job
-        if (this.options.skipDuplicateUrls && url !== undefined) {
-            this.duplicateCheckUrls.add(url);
-        }
-        if (this.options.sameDomainDelay !== 0 && domain !== undefined) {
-            this.lastDomainAccesses.set(domain, Date.now());
-        }
-
         const worker = this.workersAvail.shift() as Worker<JobData, ReturnData>;
         this.workersBusy.push(worker);
 
@@ -323,6 +294,19 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
             job,
             this.options.timeout,
         );
+
+        // NOTE: since we need always a clean user-data-dir, close the worker after the job is completed
+        // NOTE: the cluster doWork call will check if more workers need to be spawned automatically
+        debug(`trying to close worker #${worker.id}`);
+        await worker.close()
+
+        // remove the worker from the workers and workersBusy queues
+        const wi = this.workersBusy.indexOf(worker);
+        this.workersBusy.splice(wi, 1);
+
+        const wiw = this.workers.indexOf(worker);
+        this.workers.splice(wiw, 1);
+
 
         if (result.type === 'error') {
             if (job.executeCallbacks) {
@@ -354,10 +338,10 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
         this.waitForOneResolvers = [];
 
         // add worker to available workers again
-        const workerIndex = this.workersBusy.indexOf(worker);
-        this.workersBusy.splice(workerIndex, 1);
-
-        this.workersAvail.push(worker);
+       // const workerIndex = this.workersBusy.indexOf(worker);
+       // this.workersBusy.splice(workerIndex, 1);
+       //
+       // this.workersAvail.push(worker);
 
         this.work();
     }
@@ -366,6 +350,7 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
 
     private allowedToStartWorker(): boolean {
         const workerCount = this.workers.length + this.workersStarting;
+        //debug(`allowedToStartWorker-> workers.length ${this.workers.length} workersStarting ${this.workersStarting}\n     workerCount #${workerCount}`);
         return (
             // option: maxConcurrency
             (this.options.maxConcurrency === 0

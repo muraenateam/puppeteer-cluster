@@ -87,7 +87,7 @@ describe('options', () => {
 
     concurrencyTypes.forEach((concurrency) => {
         describe(`concurrency: ${concurrency}`, () => {
-
+/*
             test('skipDuplicateUrls', async () => {
                 expect.assertions(1);
 
@@ -111,7 +111,8 @@ describe('options', () => {
                 await cluster.idle();
                 await cluster.close();
             });
-
+*/
+/*
             test('skipDuplicateUrls (parallel)', async () => {
                 expect.assertions(1);
 
@@ -137,7 +138,7 @@ describe('options', () => {
                 await cluster.idle();
                 await cluster.close();
             });
-
+*/
             test('retryLimit', async () => {
                 expect.assertions(4); // 3 retries -> 4 times called
 

@@ -1,7 +1,7 @@
 {
-  "name": "puppeteer-cluster",
-  "version": "0.22.0",
-  "description": "Cluster management for puppeteer",
+  "name": "@muraenateam/puppeteer-cluster",
+  "version": "0.1.0",
+  "description": "Cluster management for puppeteer, forked for Necrobrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -14,10 +14,11 @@
   "author": "Thomas Dondorf",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thomasdondorf/puppeteer-cluster.git"
+    "url": "https://github.com/muraenateam/puppeteer-cluster.git"
   },
-  "homepage": "https://github.com/thomasdondorf/puppeteer-cluster",
+  "homepage": "https://github.com/muraenateam/puppeteer-cluster",
   "keywords": [
+    "necrobrowser",
     "puppeteer",
     "cluster",
     "pool"
