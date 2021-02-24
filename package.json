@@ -1,6 +1,6 @@
 {
   "name": "@muraenateam/puppeteer-cluster",
-  "version": "0.2",
+  "version": "0.2.0",
   "description": "Cluster management for puppeteer, forked for Necrobrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
