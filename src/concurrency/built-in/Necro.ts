@@ -1,37 +1,37 @@
-
 import * as puppeteer from 'puppeteer';
+import ConcurrencyImplementation, {WorkerInstance} from '../ConcurrencyImplementation';
 
-import { debugGenerator, timeoutExecute } from '../../util';
-import ConcurrencyImplementation, { WorkerInstance } from '../ConcurrencyImplementation';
-import { LaunchOptions } from 'puppeteer';
-const debug = debugGenerator('BrowserConcurrency');
-
-import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
 
+import {debugGenerator, timeoutExecute} from '../../util';
+
+const debug = debugGenerator('BrowserConcurrency');
 const BROWSER_TIMEOUT = 5000;
 
 export default class Necro extends ConcurrencyImplementation {
-    public async init() {}
-    public async close() {}
+    public async init() {
+    }
+
+    public async close() {
+    }
 
     public async workerInstance(perBrowserOptions: puppeteer.LaunchOptions | undefined):
         Promise<WorkerInstance> {
 
-        const options = perBrowserOptions || this.options;
+        // Access by value not reference, so we can generate dynamic user-data-dir paths
+        const options = Object.assign({}, perBrowserOptions || this.options);
 
-        // TODO improve this
-        var rr = Math.random().toString(36).substring(7);
-        var userDataDir = `${path.join(__dirname, '..', '..','..', '..', '..', 'profiles', rr)}`
-        debug('Necro concurrency: adding to options --user-data-dir=' + userDataDir);
-        options['userDataDir'] = (userDataDir)
-        debug(util.inspect(options))
+        options.userDataDir = options.userDataDir || '.';
+        const rr = Math.random().toString(36).substring(2, 7);
+        options.userDataDir = path.join(options.userDataDir, rr);
 
-        if (!fs.existsSync(userDataDir)) {
-            fs.mkdirSync(userDataDir);
-            debug('created new userDataDir directory')
-        }
+        debug(`Necrobrowser: --user-data-dir=${options.userDataDir}`);
+        debug(util.inspect(options));
+
+        //
+        // Below is similar to concurrency built-in Browser.ts
+        //
 
         let chrome = await this.puppeteer.launch(options) as puppeteer.Browser;
         let page: puppeteer.Page;
@@ -64,7 +64,8 @@ export default class Necro extends ConcurrencyImplementation {
                 try {
                     // will probably fail, but just in case the repair was not necessary
                     await chrome.close();
-                } catch (e) {}
+                } catch (e) {
+                }
 
                 // just relaunch as there is only one page per browser
                 chrome = await this.puppeteer.launch(this.options);
