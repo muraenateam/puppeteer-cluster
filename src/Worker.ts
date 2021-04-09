@@ -1,7 +1,7 @@
 
 import Job from './Job';
 import Cluster, { TaskFunction } from './Cluster';
-import { Page } from 'puppeteer';
+import { Browser, Page } from 'puppeteer';
 import { timeoutExecute, debugGenerator, log } from './util';
 import { inspect } from 'util';
 import { WorkerInstance, JobInstance } from './concurrency/ConcurrencyImplementation';
@@ -60,6 +60,7 @@ export default class Worker<JobData, ReturnData> implements WorkerOptions {
 
         let jobInstance: JobInstance | null = null;
         let page: Page | null = null;
+        let browser: Browser | null = null ;
 
         let tries = 0;
 
@@ -67,8 +68,11 @@ export default class Worker<JobData, ReturnData> implements WorkerOptions {
             try {
                 jobInstance = await this.browser.jobInstance();
                 page = jobInstance.resources.page;
+                // we expose also a reference to the browser, in case we want to customize
+                // the running context in the task (for example spawning N tabs on the same context)
+                browser = jobInstance.resources.browser;
             } catch (err) {
-                debug(`Error getting browser page (try: ${tries}), message: ${err.message}`);
+                debug(`Error getting browser/page (try: ${tries}), message: ${err.message}`);
                 await this.browser.repair();
                 tries += 1;
                 if (tries >= BROWSER_INSTANCE_TRIES) {
@@ -94,6 +98,7 @@ export default class Worker<JobData, ReturnData> implements WorkerOptions {
             result = await timeoutExecute(
                 timeout,
                 task({
+                    browser,
                     page,
                     // data might be undefined if queue is only called with a function
                     // we ignore that case, as the user should use Cluster<undefined> in that case

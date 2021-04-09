@@ -46,6 +46,7 @@ export default class Necro extends ConcurrencyImplementation {
 
                 return {
                     resources: {
+                        browser: await chrome,
                         page,
                     },
 

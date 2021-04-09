@@ -1,5 +1,5 @@
 
-import { Page, LaunchOptions } from 'puppeteer';
+import { Page, Browser, LaunchOptions } from 'puppeteer';
 
 /**
  * ABSTRACT CLASS Needs to be implemented to manage one or more browsers via puppeteer instances
@@ -74,6 +74,8 @@ export interface JobInstance {
 }
 
 export interface ResourceData {
+    // added browser to have a reference to chrome and use multi-tabs parallel approaches
+    browser: Browser;
     page: Page;
     [key: string]: any;
 }

@@ -23,6 +23,17 @@ Install puppeteer-cluster:
 
 `npm install --save @muraenateam/puppeteer-cluster`
 
+## Hacking
+
+If you edit the TypeScript source, you need to rebuild first and use a local version of this library.
+
+puppeteer-cluster$ rm -rf ./node-modules && npm run-script clean 
+puppeteer-cluster$ npm install tsc typescript jest
+puppeteer-cluster$ npm run-script build --target ES6 --force
+> @muraenateam/puppeteer-cluster@0.2.1 build
+> tsc "ES6"
+
+At this stage you should have freshly generated javascript in dist.
 
 ## License
 

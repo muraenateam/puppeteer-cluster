@@ -6,7 +6,7 @@ import Worker, { WorkResult } from './Worker';
 
 import * as builtInConcurrency from './concurrency/builtInConcurrency';
 
-import { LaunchOptions, Page } from 'puppeteer';
+import { LaunchOptions, Page, Browser } from 'puppeteer';
 import Queue from './Queue';
 import SystemMonitor from './SystemMonitor';
 import { EventEmitter } from 'events';
@@ -55,6 +55,7 @@ const DEFAULT_OPTIONS: ClusterOptions = {
 
 interface TaskFunctionArguments<JobData> {
     page: Page;
+    browser: Browser;
     data: JobData;
     worker: {
         id: number;
@@ -295,10 +296,11 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
             this.options.timeout,
         );
 
+        // tslint:disable-next-line:max-line-length
         // NOTE: since we need always a clean user-data-dir, close the worker after the job is completed
         // NOTE: the cluster doWork call will check if more workers need to be spawned automatically
         debug(`trying to close worker #${worker.id}`);
-        await worker.close()
+        await worker.close();
 
         // remove the worker from the workers and workersBusy queues
         const wi = this.workersBusy.indexOf(worker);
@@ -306,7 +308,6 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
 
         const wiw = this.workers.indexOf(worker);
         this.workers.splice(wiw, 1);
-
 
         if (result.type === 'error') {
             if (job.executeCallbacks) {
@@ -350,7 +351,6 @@ export default class Cluster<JobData = any, ReturnData = any> extends EventEmitt
 
     private allowedToStartWorker(): boolean {
         const workerCount = this.workers.length + this.workersStarting;
-        //debug(`allowedToStartWorker-> workers.length ${this.workers.length} workersStarting ${this.workersStarting}\n     workerCount #${workerCount}`);
         return (
             // option: maxConcurrency
             (this.options.maxConcurrency === 0

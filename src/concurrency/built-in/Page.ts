@@ -7,8 +7,10 @@ import SingleBrowserImplementation from '../SingleBrowserImplementation';
 export default class Page extends SingleBrowserImplementation {
 
     protected async createResources(): Promise<ResourceData> {
+        let browser = await (this.browser as puppeteer.Browser);
         return {
-            page: await (this.browser as puppeteer.Browser).newPage(),
+            browser: browser,
+            page: await browser.newPage(),
         };
     }
 

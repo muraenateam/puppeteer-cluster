@@ -1,4 +1,4 @@
-import { Page, LaunchOptions } from 'puppeteer';
+import { Page, Browser, LaunchOptions } from 'puppeteer';
 /**
  * ABSTRACT CLASS Needs to be implemented to manage one or more browsers via puppeteer instances
  *
@@ -56,6 +56,7 @@ export interface JobInstance {
     close: () => Promise<void>;
 }
 export interface ResourceData {
+    browser: Browser;
     page: Page;
     [key: string]: any;
 }

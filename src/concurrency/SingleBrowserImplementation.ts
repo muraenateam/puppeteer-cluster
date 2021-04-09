@@ -23,6 +23,7 @@ export default abstract class SingleBrowserImplementation extends ConcurrencyImp
     private async repair() {
         if (this.openInstances !== 0 || this.repairing) {
             // already repairing or there are still pages open? wait for start/finish
+            // @ts-ignore
             await new Promise(resolve => this.waitingForRepairResolvers.push(resolve));
             return;
         }

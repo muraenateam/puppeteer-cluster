@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { LaunchOptions, Page } from 'puppeteer';
+import { LaunchOptions, Page, Browser } from 'puppeteer';
 import { EventEmitter } from 'events';
 import { ConcurrencyImplementationClassType } from './concurrency/ConcurrencyImplementation';
 interface ClusterOptions {
@@ -22,6 +22,7 @@ declare type Partial<T> = {
 declare type ClusterOptionsArgument = Partial<ClusterOptions>;
 interface TaskFunctionArguments<JobData> {
     page: Page;
+    browser: Browser;
     data: JobData;
     worker: {
         id: number;

@@ -28,6 +28,7 @@ export default class Browser extends ConcurrencyImplementation {
 
                 return {
                     resources: {
+                        browser: await chrome,
                         page,
                     },
 
